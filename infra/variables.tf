@@ -5,22 +5,29 @@ variable "elastic_app" {
 
 variable "app_env" {
   type = string
-  default = "fightthetide"
+  default = "develop"
 }
 
-variable "solution_stack_name" {
+variable "solution_stack_name_match" {
   type = string
-  default = "infra-stack"
+  default = "^64bit Amazon Linux 2 v3(.*) running Python 3(.*)$"
 }
 
 variable "tier" {
   type = string
-  default = "dev"
+  default = "WebServer"
 }
 
 variable "instance_type" {
   type = string
   default = "t3.micro"
 }
- 
-variable "vpc_id" {}
+
+variable "region" {
+  type = string
+  default = "us-east-1"
+}
+
+variable "vpc_id" {
+  type = string
+}
