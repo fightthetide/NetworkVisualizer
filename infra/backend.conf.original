@@ -1,0 +1,3 @@
+key    = "network-visualizer"
+bucket = "{DEPLOYMENT_BUCKET}"
+region = "{DEPLOYMENT_REGION}"
