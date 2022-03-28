@@ -7,5 +7,4 @@ def hello_world():
     return 'A hello world Flask Project'
 
 if __name__ == '__main__':
-    
-    ai_api.run(debug = True,port=8080)
+    ai_api.run(port=8080)
