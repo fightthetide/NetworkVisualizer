@@ -1,0 +1,61 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_env:
+        description: 'Deployment environment'
+        default: 'dev'
+        required: true
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infra
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+    
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-region: ${{ secrets.DEPLOYMENT_REGION }}
+        aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+    
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: |
+        ENVIRONMENT=${{ inputs.deployment_env }}
+        VPC_ID=$(aws ec2 describe-vpcs \
+          --filter Name=tag:environment,Values=$ENVIRONMENT \
+          --region=$DEPLOYMENT_REGION \
+          --query Vpcs[0].VpcId \
+          --output text)
+
+        touch ./terraform.tfvars
+        echo "vpc_id = \"${VPC_ID}\"" > ./terraform.tfvars
+
+        mv ./backend.conf.original ./backend.conf
+        sed -i "s/{DEPLOYMENT_BUCKET}/$DEPLOYMENT_BUCKET/g" ./backend.conf
+        sed -i "s/{DEPLOYMENT_REGION}/$DEPLOYMENT_REGION/g" ./backend.conf
+
+        terraform init -backend-config=backend.conf
+      env:
+        DEPLOYMENT_BUCKET: ${{ secrets.DEPLOYMENT_BUCKET }}
+        DEPLOYMENT_REGION: ${{ secrets.DEPLOYMENT_REGION }}
+    
+    - name: Terraform Destroy
+      run: terraform destroy -auto-approve
