@@ -15,7 +15,10 @@ jobs:
     defaults:
       run:
         shell: bash
+<<<<<<< HEAD
         working-directory: ./infra
+=======
+>>>>>>> 1d6f8b93c1277ec3dec48d5c141ea0becc23504f
 
     steps:
     # Checkout the repository to the GitHub Actions runner
@@ -39,7 +42,7 @@ jobs:
     - name: Echo environment
       run: |
         echo "the deployment environment is: ${{ steps.set_environment.outputs.environment }}"
-
+    
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
