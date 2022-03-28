@@ -42,14 +42,9 @@ jobs:
           echo "::set-output name=environment::dev"
         fi
     
-    - name: Echo environment
-      run: |
-        echo "the deployment environment is: ${{ steps.set_environment.outputs.environment }}"
-    
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
-        env
         ENVIRONMENT=${{ steps.set_environment.outputs.environment }}
         VPC_ID=$(aws ec2 describe-vpcs \
           --filter Name=tag:environment,Values=$ENVIRONMENT \
@@ -68,11 +63,6 @@ jobs:
       env:
         DEPLOYMENT_BUCKET: ${{ secrets.DEPLOYMENT_BUCKET }}
         DEPLOYMENT_REGION: ${{ secrets.DEPLOYMENT_REGION }}
-          
-
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -check
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
