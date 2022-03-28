@@ -1,0 +1,80 @@
+name: 'Terraform'
+
+on:
+  push:
+    branches: [ develop, main ]
+  workflow_dispatch:
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    environment: production
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./infra
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+
+    - name: Set environment
+      id: set_environment
+      run: |
+        prod="${{ github.event.pull_request.base.ref == 'main' || github.ref == 'refs/head/main' }}"
+        if [ "$prod" = true ]; then
+          echo "::set-output name=environment::prod"
+        else
+          echo "::set-output name=environment::dev"
+        fi
+    
+    - name: Echo environment
+      run: |
+        echo "the deployment environment is: ${{ steps.set_environment.outputs.environment }}"
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: Terraform Init
+      run: |
+        ENVIRONMENT=${{ steps.set_environment.outputs.environment }}
+        REGION='us-east-1'
+        VPC_ID=$(aws ec2 describe-vpcs \
+          --filter Name=tag:environment,Values=$ENVIRONMENT \
+          --region=$REGION \
+          --query Vpcs[0].VpcId \
+          --output text)
+
+        touch ./infra/terraform.tfvars
+        echo "vpc_id = ${VPC_ID}" > ./infra/terraform.tfvars
+
+        mv ./infra/backend.conf.original ./infra/backend.conf
+        sed -i 's/{DEPLOYMENT_BUCKET}/$DEPLOYMENT_BUCKET/g' ./infra/backend.conf
+        sed -i 's/{DEPLOYMENT_REGION}/$DEPLOYMENT_REGION/g' ./infra/backend.conf
+
+        terraform init -backend-config=backend.conf
+      env:
+        DEPLOYMENT_BUCKET: ${{ secrets.DEPLOYMENT_BUCKET }}
+        DEPLOYMENT_REGION: ${{ secrets.DEPLOYMENT_REGION }}
+          
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: Terraform Format
+      run: terraform fmt -check
+
+    # Generates an execution plan for Terraform
+    - name: Terraform Plan
+      run: terraform plan
+
+      # On push to develop, build or change infrastructure according to Terraform configuration files
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
