@@ -65,8 +65,8 @@ jobs:
 
         terraform init -backend-config=backend.conf
       env:
-        DEPLOYMENT_BUCKET: ${{ secrets.DEPLOYMENT_BUCKET }}
-        DEPLOYMENT_REGION: ${{ secrets.DEPLOYMENT_REGION }}
+        DEPLOYMENT_BUCKET: ${{ env.DEPLOYMENT_BUCKET }}
+        DEPLOYMENT_REGION: ${{ env.DEPLOYMENT_REGION }}
           
 
     # Checks that all Terraform configuration files adhere to a canonical format
