@@ -53,7 +53,7 @@ jobs:
           --output text)
 
         touch ./terraform.tfvars
-        echo "vpc_id = ${VPC_ID}" > ./terraform.tfvars
+        echo "vpc_id = \"${VPC_ID}\"" > ./terraform.tfvars
 
         mv ./backend.conf.original ./backend.conf
         sed -i "s/{DEPLOYMENT_BUCKET}/$DEPLOYMENT_BUCKET/g" ./backend.conf
