@@ -56,12 +56,12 @@ jobs:
           --query Vpcs[0].VpcId \
           --output text)
 
-        touch ./infra/terraform.tfvars
-        echo "vpc_id = ${VPC_ID}" > ./infra/terraform.tfvars
+        touch ./terraform.tfvars
+        echo "vpc_id = ${VPC_ID}" > ./terraform.tfvars
 
-        mv ./infra/backend.conf.original ./infra/backend.conf
-        sed -i 's/{DEPLOYMENT_BUCKET}/$DEPLOYMENT_BUCKET/g' ./infra/backend.conf
-        sed -i 's/{DEPLOYMENT_REGION}/$DEPLOYMENT_REGION/g' ./infra/backend.conf
+        mv ./backend.conf.original ./backend.conf
+        sed -i 's/{DEPLOYMENT_BUCKET}/$DEPLOYMENT_BUCKET/g' ./backend.conf
+        sed -i 's/{DEPLOYMENT_REGION}/$DEPLOYMENT_REGION/g' ./backend.conf
 
         terraform init -backend-config=backend.conf
       env:
