@@ -49,6 +49,7 @@ jobs:
     # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: Terraform Init
       run: |
+        env
         ENVIRONMENT=${{ steps.set_environment.outputs.environment }}
         VPC_ID=$(aws ec2 describe-vpcs \
           --filter Name=tag:environment,Values=$ENVIRONMENT \
@@ -65,8 +66,8 @@ jobs:
 
         terraform init -backend-config=backend.conf
       env:
-        DEPLOYMENT_BUCKET: '${{ secrets.DEPLOYMENT_BUCKET }}'
-        DEPLOYMENT_REGION: '${{ secrets.DEPLOYMENT_REGION }}'
+        DEPLOYMENT_BUCKET: ${{ secrets.DEPLOYMENT_BUCKET }}
+        DEPLOYMENT_REGION: ${{ secrets.DEPLOYMENT_REGION }}
           
 
     # Checks that all Terraform configuration files adhere to a canonical format
